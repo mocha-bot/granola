@@ -68,11 +68,21 @@ func main() {
 	zLog.Info().Msg("Starting application")
 
 	var wg sync.WaitGroup
+	delta := 1
 
-	wg.Add(1)
+	channel := "channel"
+	workers := cfg.GoroutineConfig.Workers
+
+	wg.Add(delta)
 	go func() {
 		defer wg.Done()
-		ListenRedisPubSub(ctx, redis, "channel")
+		ListenRedisPubSub(ctx, redis, channel, workers)
+	}()
+
+	wg.Add(delta)
+	go func() {
+		defer wg.Done()
+		ProcessMessage(ctx, channel, workers)
 	}()
 
 	<-ctx.Done()

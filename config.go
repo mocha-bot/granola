@@ -76,11 +76,16 @@ func (r RedisConfig) GetAddress() string {
 	return fmt.Sprintf("%s:%d", r.Host, r.Port)
 }
 
+type GoroutineConfig struct {
+	Workers int `env:"WORKERS" envDefault:"10"`
+}
+
 type Config struct {
 	AppConfig
 	DatabaseConfig
 	RedisConfig
 	MeilisearchConfig
+	GoroutineConfig
 }
 
 func GetConfig() (*Config, error) {
