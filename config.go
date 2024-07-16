@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/caarlos0/env/v6"
 )
 
@@ -17,6 +19,10 @@ type RedisConfig struct {
 	Port     int    `env:"REDIS_PORT" envDefault:"6379"`
 	Password string `env:"REDIS_PASSWORD"`
 	DB       int    `env:"REDIS_DB" envDefault:"0"`
+}
+
+func (r RedisConfig) GetAddress() string {
+	return fmt.Sprintf("%s:%d", r.Host, r.Port)
 }
 
 type Config struct {
