@@ -9,10 +9,10 @@ import (
 
 var (
 	// store channel name and message in map to be used later
+	// TODO: process the messages
 	PubSubLake = make(map[string][]*redis.Message)
 )
 
-// make function to listen redis pub sub
 func ListenRedisPubSub(ctx context.Context, rClient *redis.Client, channel string) {
 	pubsub := rClient.Subscribe(ctx, channel)
 	defer func() {
@@ -37,13 +37,11 @@ func ListenRedisPubSub(ctx context.Context, rClient *redis.Client, channel strin
 				return
 			case msg := <-messageCh:
 				zLog.Info().Msgf("Received message: %+v", msg)
-				// store message in map
 				PubSubLake[channel] = append(PubSubLake[channel], msg)
 			}
 		}
 	}()
 
-	// Wait for the done signal to exit the function
 	<-doneCh
 	zLog.Info().Msg("Listener shut down cleanly")
 }
