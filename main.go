@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/meilisearch/meilisearch-go"
@@ -15,6 +16,8 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
 	cfg, err := GetConfig()
 	if err != nil {
 		zLog.Fatal().Err(err).Msg("Failed to get config")
@@ -26,7 +29,7 @@ func main() {
 	var meilisearch *meilisearch.Client
 	var db *gorm.DB
 
-	eg, mCtx := errgroup.WithContext(context.Background())
+	eg, mCtx := errgroup.WithContext(ctx)
 
 	eg.Go(func() (err error) {
 		db, err = NewDatabaseInstance(mCtx, cfg.DatabaseConfig)
@@ -41,7 +44,7 @@ func main() {
 		if err != nil {
 			err = fmt.Errorf("Failed to create redis client: %w", err)
 		}
-		return err
+		return
 	})
 
 	eg.Go(func() (err error) {
@@ -49,7 +52,7 @@ func main() {
 		if err != nil {
 			err = fmt.Errorf("Failed to create meilisearch client: %w", err)
 		}
-		return err
+		return
 	})
 
 	if err := eg.Wait(); err != nil {
@@ -60,12 +63,24 @@ func main() {
 	zLog.Info().Msgf("Redis client created %+v", redis)
 	zLog.Info().Msgf("Meilisearch client created %+v", meilisearch)
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 
 	zLog.Info().Msg("Starting application")
 
-	<-quit
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ListenRedisPubSub(ctx, redis, "channel")
+	}()
+
+	<-ctx.Done()
 
 	zLog.Info().Msg("Shutting down application")
+
+	stop()
+	wg.Wait()
+
+	zLog.Info().Msg("Application shut down cleanly")
 }
