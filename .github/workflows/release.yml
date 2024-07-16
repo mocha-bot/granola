@@ -1,0 +1,62 @@
+name: Granola Release Build
+
+on:
+  release:
+    types: [published]
+
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag version'
+        required: true
+
+  push:
+    branches:
+      - master
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  RELEASE_VERSION: ${{ github.event.release.tag_name }}
+  LATEST_VERSION: latest
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup go version
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.21.1'
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.DOCKER_GITHUB_TOKEN }}
+
+      - name: Sanitize environment variables
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY@L}" >> $GITHUB_ENV
+
+      - name: Set output release tag by workflow_dispatch
+        id: dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "RELEASE_VERSION=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+
+      - name: Set output release tag by push
+        id: push
+        if: github.event_name == 'push'
+        run: echo "RELEASE_VERSION=${{ github.event.head_commit.id }}" >> $GITHUB_ENV
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.RELEASE_VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.LATEST_VERSION }}
