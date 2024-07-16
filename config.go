@@ -21,6 +21,11 @@ type RedisConfig struct {
 	DB       int    `env:"REDIS_DB" envDefault:"0"`
 }
 
+type MeilisearchConfig struct {
+	Host      string `env:"MEILISEARCH_HOST" envDefault:"http://localhost:7700"`
+	MasterKey string `env:"MEILISEARCH_MASTER_KEY" envDefault:""`
+}
+
 func (r RedisConfig) GetAddress() string {
 	return fmt.Sprintf("%s:%d", r.Host, r.Port)
 }
@@ -28,6 +33,7 @@ func (r RedisConfig) GetAddress() string {
 type Config struct {
 	AppConfig
 	RedisConfig
+	MeilisearchConfig
 }
 
 func GetConfig() (*Config, error) {

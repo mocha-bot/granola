@@ -4,7 +4,7 @@ import (
 	"github.com/go-redis/redis"
 )
 
-func NewRedisInstance(conf *RedisConfig) (*redis.Client, error) {
+func NewRedisInstance(conf RedisConfig) (*redis.Client, error) {
 	redisConf := &redis.Options{
 		Addr:     conf.GetAddress(),
 		Password: conf.Password,
