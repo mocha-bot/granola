@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/meilisearch/meilisearch-go"
 )
 
-func NewMeilisearchInstance(cfg MeilisearchConfig) (*meilisearch.Client, error) {
+func NewMeilisearchInstance(ctx context.Context, cfg MeilisearchConfig) (*meilisearch.Client, error) {
 	client := meilisearch.NewClient(meilisearch.ClientConfig{
 		Host:   cfg.Host,
 		APIKey: cfg.MasterKey,

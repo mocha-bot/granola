@@ -1,10 +1,12 @@
 package main
 
 import (
-	"github.com/go-redis/redis"
+	"context"
+
+	"github.com/redis/go-redis/v9"
 )
 
-func NewRedisInstance(conf RedisConfig) (*redis.Client, error) {
+func NewRedisInstance(ctx context.Context, conf RedisConfig) (*redis.Client, error) {
 	redisConf := &redis.Options{
 		Addr:     conf.GetAddress(),
 		Password: conf.Password,
@@ -13,7 +15,7 @@ func NewRedisInstance(conf RedisConfig) (*redis.Client, error) {
 
 	rClient := redis.NewClient(redisConf)
 
-	if err := rClient.Ping().Err(); err != nil {
+	if err := rClient.Ping(ctx).Err(); err != nil {
 		return nil, err
 	}
 

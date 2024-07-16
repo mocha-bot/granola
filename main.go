@@ -7,10 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/go-redis/redis"
 	"github.com/meilisearch/meilisearch-go"
+	"github.com/redis/go-redis/v9"
 	zLog "github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -19,13 +20,24 @@ func main() {
 		zLog.Fatal().Err(err).Msg("Failed to get config")
 	}
 
+	zLog.Info().Msgf("Config: %+v", cfg)
+
 	var redis *redis.Client
 	var meilisearch *meilisearch.Client
+	var db *gorm.DB
 
-	eg, _ := errgroup.WithContext(context.Background())
+	eg, mCtx := errgroup.WithContext(context.Background())
 
 	eg.Go(func() (err error) {
-		redis, err = NewRedisInstance(cfg.RedisConfig)
+		db, err = NewDatabaseInstance(mCtx, cfg.DatabaseConfig)
+		if err != nil {
+			err = fmt.Errorf("Failed to create database instance: %w", err)
+		}
+		return
+	})
+
+	eg.Go(func() (err error) {
+		redis, err = NewRedisInstance(mCtx, cfg.RedisConfig)
 		if err != nil {
 			err = fmt.Errorf("Failed to create redis client: %w", err)
 		}
@@ -33,7 +45,7 @@ func main() {
 	})
 
 	eg.Go(func() (err error) {
-		meilisearch, err = NewMeilisearchInstance(cfg.MeilisearchConfig)
+		meilisearch, err = NewMeilisearchInstance(mCtx, cfg.MeilisearchConfig)
 		if err != nil {
 			err = fmt.Errorf("Failed to create meilisearch client: %w", err)
 		}
@@ -44,7 +56,7 @@ func main() {
 		zLog.Fatal().Err(err).Msg("Failed to create clients")
 	}
 
-	zLog.Info().Msgf("Config: %+v", cfg)
+	zLog.Info().Msgf("Database client created %+v", db)
 	zLog.Info().Msgf("Redis client created %+v", redis)
 	zLog.Info().Msgf("Meilisearch client created %+v", meilisearch)
 
