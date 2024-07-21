@@ -12,8 +12,28 @@ var (
 	PubSubLake = make(map[string]chan *redis.Message)
 )
 
-func ListenRedisPubSub(ctx context.Context, rClient *redis.Client, channel string, workers int) {
-	pubsub := rClient.Subscribe(ctx, channel)
+type RedisProcess interface {
+	ListenRedisPubSub(ctx context.Context, channel string)
+	ProcessMessage(ctx context.Context, channel string)
+}
+
+type redisProcess struct {
+	RedisClient *redis.Client
+	TotalWorker int
+
+	UseCase UseCase
+}
+
+func NewRedisProcess(redisClient *redis.Client, workers int, useCase UseCase) RedisProcess {
+	return &redisProcess{
+		RedisClient: redisClient,
+		TotalWorker: workers,
+		UseCase:     useCase,
+	}
+}
+
+func (h *redisProcess) ListenRedisPubSub(ctx context.Context, channel string) {
+	pubsub := h.RedisClient.Subscribe(ctx, channel)
 	pubsub.Subscribe(ctx, channel)
 
 	defer func() {
@@ -27,12 +47,12 @@ func ListenRedisPubSub(ctx context.Context, rClient *redis.Client, channel strin
 
 	zLog.Info().Msgf("Listening to channel: %s", channel)
 
-	PubSubLake[channel] = make(chan *redis.Message, workers)
+	PubSubLake[channel] = make(chan *redis.Message, h.TotalWorker)
 
 	for {
 		select {
 		case <-ctx.Done():
-			zLog.Info().Msgf("Stopping listening to channel: %s", channel)
+			zLog.Info().Msgf("Stopping listening to the channel: %s", channel)
 			return
 		case msg, ok := <-pubsub.Channel():
 			if !ok {
@@ -45,9 +65,9 @@ func ListenRedisPubSub(ctx context.Context, rClient *redis.Client, channel strin
 	}
 }
 
-func ProcessMessage(ctx context.Context, channel string, workers int) {
-	for idx := 0; idx < workers; idx++ {
-		zLog.Info().Msgf("Starting worker %d", idx)
+func (h *redisProcess) ProcessMessage(ctx context.Context, channel string) {
+	for idx := 1; idx <= h.TotalWorker; idx++ {
+		zLog.Info().Msgf("Starting worker %d at channel: %s", idx, channel)
 		go func(i int) {
 			for {
 				select {

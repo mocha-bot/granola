@@ -63,6 +63,10 @@ func main() {
 	zLog.Info().Msgf("Redis client created %+v", redis)
 	zLog.Info().Msgf("Meilisearch client created %+v", meilisearch)
 
+	repo := NewRepository(db)
+	useCase := NewUseCase(repo)
+	redisProcess := NewRedisProcess(redis, cfg.GoroutineConfig.Workers, useCase)
+
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 
 	zLog.Info().Msg("Starting application")
@@ -71,18 +75,17 @@ func main() {
 	delta := 1
 
 	channel := "channel"
-	workers := cfg.GoroutineConfig.Workers
 
 	wg.Add(delta)
 	go func() {
 		defer wg.Done()
-		ListenRedisPubSub(ctx, redis, channel, workers)
+		redisProcess.ListenRedisPubSub(ctx, channel)
 	}()
 
 	wg.Add(delta)
 	go func() {
 		defer wg.Done()
-		ProcessMessage(ctx, channel, workers)
+		redisProcess.ProcessMessage(ctx, channel)
 	}()
 
 	<-ctx.Done()
