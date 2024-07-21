@@ -77,7 +77,8 @@ func (r RedisConfig) GetAddress() string {
 }
 
 type GoroutineConfig struct {
-	Workers int `env:"WORKERS" envDefault:"10"`
+	Channel string `env:"CHANNEL" envDefault:""`
+	Workers int    `env:"WORKERS" envDefault:"10"`
 }
 
 type Config struct {

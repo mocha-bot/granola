@@ -63,9 +63,9 @@ func main() {
 	zLog.Info().Msgf("Redis client created %+v", redis)
 	zLog.Info().Msgf("Meilisearch client created %+v", meilisearch)
 
-	repo := NewRepository(db)
+	repo := NewRepository(db, meilisearch)
 	useCase := NewUseCase(repo)
-	redisProcess := NewRedisProcess(redis, cfg.GoroutineConfig.Workers, useCase)
+	roomUpdate := NewPubSub(redis, cfg.GoroutineConfig.Channel, cfg.GoroutineConfig.Workers, useCase)
 
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 
@@ -74,18 +74,16 @@ func main() {
 	var wg sync.WaitGroup
 	delta := 1
 
-	channel := "channel"
-
 	wg.Add(delta)
 	go func() {
 		defer wg.Done()
-		redisProcess.ListenRedisPubSub(ctx, channel)
+		roomUpdate.ListenRedisPubSub(ctx)
 	}()
 
 	wg.Add(delta)
 	go func() {
 		defer wg.Done()
-		redisProcess.ProcessMessage(ctx, channel)
+		roomUpdate.ProcessMessage(ctx)
 	}()
 
 	<-ctx.Done()
