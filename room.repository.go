@@ -36,7 +36,7 @@ func (r *repository) FetchRoomBySerial(ctx context.Context, serial string) (room
 	err = r.db.WithContext(ctx).Table("room r").
 		Select("r.serial, r.name, r.description, r.created_by, COUNT(rc.channel_serial) AS total_channel, 0.0 AS rate, r.created_at, r.updated_at").
 		Joins("LEFT JOIN room_channel rc ON r.serial = rc.room_serial").
-		Joins("LEFT JOIN room_tag rt ON r.serial = rt.room_serial").
+		Joins("LEFT JOIN reference_tag rt ON r.serial = rt.reference").
 		Where("r.serial = ?", serial).
 		Group("r.serial, r.name, r.description, r.created_by").
 		First(&room).Error
@@ -45,10 +45,10 @@ func (r *repository) FetchRoomBySerial(ctx context.Context, serial string) (room
 }
 
 func (r *repository) FetchTagsByRoomSerial(ctx context.Context, serial string) (tags Tags, err error) {
-	err = r.db.WithContext(ctx).Table("room_tag rt").
+	err = r.db.WithContext(ctx).Table("reference_tag rt").
 		Select("t.serial, t.name, t.description").
 		Joins("JOIN tag t ON rt.tag_serial = t.serial").
-		Where("rt.room_serial = ?", serial).
+		Where("rt.reference = ?", serial).
 		Find(&tags).
 		Error
 
