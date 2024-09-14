@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 	zLog "github.com/rs/zerolog/log"
@@ -108,8 +107,6 @@ func (h *pubSub) ProcessMessage(ctx context.Context) {
 					}
 
 					zLog.Debug().Msgf("Worker %d added room to document: %+v", i, room)
-				case <-time.After(100 * time.Millisecond):
-					// ! to prevent blocking it makes the cpu usage high
 				}
 			}
 		}(idx)
