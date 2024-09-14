@@ -1,8 +1,11 @@
 package main
 
 import (
+	_ "net/http/pprof"
+
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -25,8 +28,19 @@ func main() {
 
 	zLog.Info().Msgf("Config: %+v", cfg)
 
+	if cfg.PPROF.IsEnabled {
+		zLog.Info().Msg("Starting pprof...")
+		go func() {
+			zLog.Info().Msgf("pprof is now running on %s", cfg.PPROF.Address())
+			err := http.ListenAndServe(cfg.PPROF.Address(), nil)
+			if err != nil {
+				zLog.Fatal().Err(err).Caller().Msg("error starting pprof")
+			}
+		}()
+	}
+
 	var redis *redis.Client
-	var meilisearch *meilisearch.Client
+	var meilisearch meilisearch.ServiceManager
 	var db *gorm.DB
 
 	eg, mCtx := errgroup.WithContext(ctx)
