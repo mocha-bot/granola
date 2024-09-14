@@ -107,8 +107,6 @@ func (h *pubSub) ProcessMessage(ctx context.Context) {
 					}
 
 					zLog.Debug().Msgf("Worker %d added room to document: %+v", i, room)
-				default:
-					// Add default case to prevent blocking
 				}
 			}
 		}(idx)

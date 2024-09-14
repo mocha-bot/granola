@@ -15,6 +15,7 @@ type AppConfig struct {
 	Port     int    `env:"APP_PORT" envDefault:"8080"`
 	LogLevel string `env:"LOG_LEVEL" envDefault:"debug"`
 	TimeZone string `env:"TIME_ZONE" envDefault:"Asia/Jakarta"`
+	Profile  bool   `env:"PROFILE_ENABLED" envDefault:"false"`
 }
 
 type DatabaseDialect string
@@ -81,12 +82,23 @@ type GoroutineConfig struct {
 	Workers int    `env:"WORKERS" envDefault:"10"`
 }
 
+type PPROF struct {
+	Host      string `env:"PPROF_HOST" envDefault:"localhost"`
+	Port      string `env:"PPROF_PORT" envDefault:"6060"`
+	IsEnabled bool   `env:"PPROF_ENABLED" envDefault:"false"`
+}
+
+func (p *PPROF) Address() string {
+	return fmt.Sprintf("%s:%s", p.Host, p.Port)
+}
+
 type Config struct {
 	AppConfig
 	DatabaseConfig
 	RedisConfig
 	MeilisearchConfig
 	GoroutineConfig
+	PPROF
 }
 
 func GetConfig() (*Config, error) {

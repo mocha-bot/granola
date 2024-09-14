@@ -22,10 +22,10 @@ type Repository interface {
 
 type repository struct {
 	db     *gorm.DB
-	search *meilisearch.Client
+	search meilisearch.ServiceManager
 }
 
-func NewRepository(db *gorm.DB, search *meilisearch.Client) Repository {
+func NewRepository(db *gorm.DB, search meilisearch.ServiceManager) Repository {
 	return &repository{
 		db:     db,
 		search: search,
