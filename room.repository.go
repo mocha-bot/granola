@@ -12,6 +12,7 @@ import (
 type RoomRepository interface {
 	FetchRoomBySerial(ctx context.Context, serial string) (room Room, err error)
 	FetchTagsByRoomSerial(ctx context.Context, serial string) (tags Tags, err error)
+	FetchRatingByRoomSerial(ctx context.Context, serial string) (rate float64, err error)
 
 	AddToDocument(ctx context.Context, index string, room Room) (err error)
 }
@@ -50,6 +51,16 @@ func (r *repository) FetchTagsByRoomSerial(ctx context.Context, serial string) (
 		Joins("JOIN tag t ON rt.tag_serial = t.serial").
 		Where("rt.reference = ?", serial).
 		Find(&tags).
+		Error
+
+	return
+}
+
+func (r *repository) FetchRatingByRoomSerial(ctx context.Context, serial string) (rate float64, err error) {
+	err = r.db.WithContext(ctx).Table("rating_summary rs").
+		Select("average_rating").
+		Where("rs.reference = ?", serial).
+		First(&rate).
 		Error
 
 	return
