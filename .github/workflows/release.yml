@@ -10,10 +10,6 @@ on:
         description: 'Tag version'
         required: true
 
-  push:
-    branches:
-      - master
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
