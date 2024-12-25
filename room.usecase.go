@@ -28,13 +28,13 @@ func (u *useCase) GetRoomBySerial(ctx context.Context, serial string) (room Room
 		return
 	}
 
-	rate, err := u.repo.FetchRatingByRoomSerial(ctx, serial)
+	rateSummary, err := u.repo.FetchRatingByRoomSerial(ctx, serial)
 	if err != nil {
 		return
 	}
 
 	room.Tags = tags
-	room.Rate = rate
+	room.Rate = rateSummary.Rate
 
 	return
 }
