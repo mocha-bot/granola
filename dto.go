@@ -22,3 +22,12 @@ type Tag struct {
 type Tags []*Tag
 
 type Languages []string
+
+type RatingSummary struct {
+	Reference string  `gorm:"column:reference"`
+	Rate      float64 `gorm:"column:average_rating"`
+}
+
+func (RatingSummary) TableName() string {
+	return "rating_summary"
+}
