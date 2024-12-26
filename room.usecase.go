@@ -4,7 +4,7 @@ import "context"
 
 type UseCase interface {
 	GetRoomBySerial(ctx context.Context, serial string) (room Room, err error)
-	AddToDocument(ctx context.Context, index string, room Room) (err error)
+	UpsertDocument(ctx context.Context, index string, room Room) (err error)
 }
 
 type useCase struct {
@@ -39,7 +39,7 @@ func (u *useCase) GetRoomBySerial(ctx context.Context, serial string) (room Room
 	return
 }
 
-func (u *useCase) AddToDocument(ctx context.Context, index string, room Room) (err error) {
-	err = u.repo.AddToDocument(ctx, index, room)
+func (u *useCase) UpsertDocument(ctx context.Context, index string, room Room) (err error) {
+	err = u.repo.UpsertDocument(ctx, index, room)
 	return
 }

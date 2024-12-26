@@ -100,7 +100,7 @@ func (h *pubSub) ProcessMessage(ctx context.Context) {
 
 					zLog.Debug().Msgf("Worker %d processed room: %+v", i, room)
 
-					err = h.UseCase.AddToDocument(ctx, "rooms", room)
+					err = h.UseCase.UpsertDocument(ctx, "rooms", room)
 					if err != nil {
 						zLog.Error().Err(err).Msgf("Failed to add room to document: %+v", room)
 						continue
