@@ -14,7 +14,7 @@ type RoomRepository interface {
 	FetchTagsByRoomSerial(ctx context.Context, serial string) (tags Tags, err error)
 	FetchRatingByRoomSerial(ctx context.Context, serial string) (rate RatingSummary, err error)
 
-	AddToDocument(ctx context.Context, index string, room Room) (err error)
+	UpsertDocument(ctx context.Context, index string, room Room) (err error)
 }
 
 type Repository interface {
@@ -66,7 +66,7 @@ func (r *repository) FetchRatingByRoomSerial(ctx context.Context, serial string)
 	return
 }
 
-func (r *repository) AddToDocument(ctx context.Context, index string, room Room) (err error) {
+func (r *repository) UpsertDocument(ctx context.Context, index string, room Room) (err error) {
 	roomJSON, err := json.Marshal([]Room{room})
 	if err != nil {
 		return
@@ -74,7 +74,7 @@ func (r *repository) AddToDocument(ctx context.Context, index string, room Room)
 
 	zLog.Debug().Msgf("Room JSON: %s", roomJSON)
 
-	taskInfo, err := r.search.Index(index).AddDocuments(roomJSON)
+	taskInfo, err := r.search.Index(index).AddDocumentsWithContext(ctx, roomJSON)
 	if err != nil {
 		return
 	}
