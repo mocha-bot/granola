@@ -1,5 +1,7 @@
 package main
 
+import "time"
+
 type Room struct {
 	Serial       string    `json:"serial"`
 	Name         string    `json:"name"`
@@ -9,6 +11,7 @@ type Room struct {
 	Tags         Tags      `json:"tags" gorm:"-"`
 	Languages    Languages `json:"languages" gorm:"-"`
 	Rate         float64   `json:"rate"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type Rooms []*Room
