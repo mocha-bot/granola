@@ -84,6 +84,10 @@ func (r *repository) FetchRatingByRoomSerial(ctx context.Context, serial string)
 		First(&rate).
 		Error
 
+	if err != nil && err == gorm.ErrRecordNotFound {
+		err = nil
+	}
+
 	return
 }
 
