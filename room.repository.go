@@ -34,15 +34,35 @@ func NewRepository(db *gorm.DB, search meilisearch.ServiceManager) Repository {
 }
 
 func (r *repository) FetchRoomBySerial(ctx context.Context, serial string) (room Room, err error) {
-	err = r.db.WithContext(ctx).Table("room r").
-		Select("r.serial, r.name, sv.slug, r.description, r.created_by, COUNT(rc.channel_serial) AS total_channel, 0.0 AS rate, r.created_at, r.updated_at").
-		Joins("LEFT JOIN room_channel rc ON r.serial = rc.room_serial").
-		Joins("LEFT JOIN reference_tag rt ON r.serial = rt.reference").
-		Joins("LEFT JOIN slug_version sv ON r.serial = sv.reference AND sv.is_current = 1 AND sv.type = 'room' AND sv.deleted_at IS NULL").
-		Where("r.serial = ?", serial).
-		Group("r.serial, r.name, r.description, r.created_by").
-		First(&room).Error
+	rawSQL := `
+		WITH current_slug AS (
+				SELECT reference, slug
+				FROM slug_version
+				WHERE is_current = 1 AND type = 'room' AND deleted_at IS NULL
+		)
+		SELECT 
+				r.serial, 
+				r.name, 
+				cs.slug, 
+				r.description, 
+				r.created_by, 
+				COUNT(rc.channel_serial) AS total_channel, 
+				0.0 AS rate
+		FROM 
+				room r
+				LEFT JOIN room_channel rc ON r.serial = rc.room_serial
+				LEFT JOIN reference_tag rt ON r.serial = rt.reference
+				LEFT JOIN current_slug cs ON r.serial = cs.reference
+		WHERE 
+				r.serial = ?
+		GROUP BY 
+				r.serial, r.name, cs.slug, r.description, r.created_by
+		ORDER BY 
+				r.serial
+		LIMIT 1
+	`
 
+	err = r.db.WithContext(ctx).Raw(rawSQL, serial).Scan(&room).Error
 	return
 }
 
