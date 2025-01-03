@@ -1,6 +1,9 @@
 package main
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type UseCase interface {
 	GetRoomBySerial(ctx context.Context, serial string) (room Room, err error)
@@ -35,6 +38,7 @@ func (u *useCase) GetRoomBySerial(ctx context.Context, serial string) (room Room
 
 	room.Tags = tags
 	room.Rate = rateSummary.Rate
+	room.UpdatedAt = time.Now()
 
 	return
 }

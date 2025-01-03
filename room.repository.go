@@ -35,9 +35,10 @@ func NewRepository(db *gorm.DB, search meilisearch.ServiceManager) Repository {
 
 func (r *repository) FetchRoomBySerial(ctx context.Context, serial string) (room Room, err error) {
 	err = r.db.WithContext(ctx).Table("room r").
-		Select("r.serial, r.name, r.description, r.created_by, COUNT(rc.channel_serial) AS total_channel, 0.0 AS rate, r.created_at, r.updated_at").
+		Select("r.serial, r.name, sv.slug, r.description, r.created_by, COUNT(rc.channel_serial) AS total_channel, 0.0 AS rate, r.created_at, r.updated_at").
 		Joins("LEFT JOIN room_channel rc ON r.serial = rc.room_serial").
 		Joins("LEFT JOIN reference_tag rt ON r.serial = rt.reference").
+		Joins("LEFT JOIN slug_versions sv ON r.serial = sv.reference AND sv.is_current = 1 AND sv.type = 'room' AND sv.deleted_at IS NULL").
 		Where("r.serial = ?", serial).
 		Group("r.serial, r.name, r.description, r.created_by").
 		First(&room).Error
