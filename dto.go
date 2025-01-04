@@ -5,6 +5,7 @@ import "time"
 type Room struct {
 	Serial       string    `json:"serial"`
 	Name         string    `json:"name"`
+	Slug         string    `json:"slug"`
 	Description  string    `json:"description"`
 	CreatedBy    string    `json:"created_by"`
 	TotalChannel int       `json:"total_channel"`
