@@ -37,7 +37,7 @@ func (u *useCase) GetRoomBySerial(ctx context.Context, serial string) (room Room
 	}
 
 	room.Tags = tags
-	room.Rate = rateSummary.Rate
+	room.Rate = rateSummary
 	room.UpdatedAt = time.Now()
 
 	return
