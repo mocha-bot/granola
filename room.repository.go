@@ -47,7 +47,8 @@ func (r *repository) FetchRoomBySerial(ctx context.Context, serial string) (room
 				r.description, 
 				r.created_by, 
 				COUNT(rc.channel_serial) AS total_channel, 
-				0.0 AS rate
+				0.0 AS rate,
+				r.created_at
 		FROM 
 				room r
 				LEFT JOIN room_channel rc ON r.serial = rc.room_serial

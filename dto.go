@@ -12,6 +12,7 @@ type Room struct {
 	Tags         Tags      `json:"tags" gorm:"-"`
 	Languages    Languages `json:"languages" gorm:"-"`
 	Rate         float64   `json:"rate"`
+	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
