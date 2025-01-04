@@ -12,7 +12,7 @@ import (
 type RoomRepository interface {
 	FetchRoomBySerial(ctx context.Context, serial string) (room Room, err error)
 	FetchTagsByRoomSerial(ctx context.Context, serial string) (tags Tags, err error)
-	FetchRatingByRoomSerial(ctx context.Context, serial string) (rate RatingSummary, err error)
+	FetchRatingByRoomSerial(ctx context.Context, serial string) (rate *RatingSummary, err error)
 
 	UpsertDocument(ctx context.Context, index string, room Room) (err error)
 }
@@ -46,8 +46,7 @@ func (r *repository) FetchRoomBySerial(ctx context.Context, serial string) (room
 				cs.slug, 
 				r.description, 
 				r.created_by, 
-				COUNT(rc.channel_serial) AS total_channel, 
-				0.0 AS rate,
+				COUNT(rc.channel_serial) AS total_channel,
 				r.created_at
 		FROM 
 				room r
@@ -76,9 +75,9 @@ func (r *repository) FetchTagsByRoomSerial(ctx context.Context, serial string) (
 	return
 }
 
-func (r *repository) FetchRatingByRoomSerial(ctx context.Context, serial string) (rate RatingSummary, err error) {
+func (r *repository) FetchRatingByRoomSerial(ctx context.Context, serial string) (rate *RatingSummary, err error) {
 	err = r.db.WithContext(ctx).Table("rating_summary rs").
-		Select("average_rating").
+		Select("reference, average_rating, rating_count").
 		Where("rs.reference = ?", serial).
 		First(&rate).
 		Error
