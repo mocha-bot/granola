@@ -57,8 +57,6 @@ func (r *repository) FetchRoomBySerial(ctx context.Context, serial string) (room
 				r.serial = ?
 		GROUP BY 
 				r.serial, r.name, cs.slug, r.description, r.created_by
-		ORDER BY 
-				r.serial
 		LIMIT 1
 	`
 
